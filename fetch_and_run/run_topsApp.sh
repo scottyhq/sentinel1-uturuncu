@@ -1,12 +1,13 @@
 #!/bin/bash
 
+# Command to run locally
 #S3_INPUT=s3://dinosar/processing/test/int-20180706-20180624/
 #S3_OUTPUT=s3://dinosar/results/uniongap/int-20180706-20180624/
 #S3_DEM=s3://dinosar/processing/uniongap/dem
 
 # Mounted EBS volume
 echo "Processing disk space available:"
-df -sh
+df -h
 cd /opt/scratch
 
 echo "Syncing files from ${S3_INTPUT}"
