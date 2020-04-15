@@ -8,7 +8,7 @@
 # Mounted EBS volume
 echo "Processing disk space available:"
 df -h
-lsblk
+#lsblk
 cd /opt/scratch
 
 echo "Syncing files from ${S3_INTPUT}"
@@ -21,16 +21,16 @@ echo "Downloading SLCs and Orbits..."
 aria2c -x 8 -s 8 -i download-links.txt
 
 echo "Running topsApp..."
-#topsApp.py 2>&1 | tee topsApp.log
-# Mock for testing
-mkdir merged/
-echo "Results!" > merged/results.txt
+topsApp.py 2>&1 | tee topsApp.log
+# Mock command for testing
+#mkdir merged/
+#echo "Results!" > merged/results.txt
 
 echo "Syncing results to ${S3_OUTPUT} ..."
 cp topsApp.xml topsApp.log topsProc.xml download-links.txt merged/
 aws s3 sync merged ${S3_OUTPUT}
 
-# Run for 20 minutes to allow ssh in for diagnosing problems
-sleep 20m
+# Run for X minutes to allow ssh in for diagnosing scipt errors
+sleep 10m
 
 echo "Done!"
