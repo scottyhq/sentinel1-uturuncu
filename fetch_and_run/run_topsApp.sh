@@ -8,6 +8,7 @@
 # Mounted EBS volume
 echo "Processing disk space available:"
 df -h
+lsblk
 cd /opt/scratch
 
 echo "Syncing files from ${S3_INTPUT}"
@@ -28,5 +29,8 @@ echo "Results!" > merged/results.txt
 echo "Syncing results to ${S3_OUTPUT} ..."
 cp topsApp.xml topsApp.log topsProc.xml download-links.txt merged/
 aws s3 sync merged ${S3_OUTPUT}
+
+# Run for 20 minutes to allow ssh in for diagnosing problems
+sleep 20m
 
 echo "Done!"
