@@ -81,6 +81,10 @@ def main():
     inps = cmdLineParse()
     print_batch_params()
     intname = inps.int_s3.lstrip('s3://')
+    
+    # Process in mounted EBS drive /opt/scratch
+    os.chdir('/opt/scratch')
+    
     if not os.path.isdir(intname): os.makedirs(intname)
     os.chdir(intname)
 
