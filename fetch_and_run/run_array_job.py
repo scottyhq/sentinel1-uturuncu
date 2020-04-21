@@ -44,13 +44,14 @@ def get_batch_mapping(list_s3):
 def main():
     """Launch processing of single interferogram."""
     inps = cmdLineParse()
-    pwd = os.getcwd()
-    print(pwd)
+    cwd = os.getcwd()
+    print(cwd) #run in TMP directory
+    script = os.path.join(cwd,'run_interferogram_aws.py')
     mapping = get_batch_mapping(inps.batchmap_s3)
     index = int(os.environ['AWS_BATCH_JOB_ARRAY_INDEX'])
     pairS3 = mapping[index]
     print(f'Batch index: {index}, Processing pair: {pairS3}')
-    cmd = f'./{pwd}/run_interferogram_aws.py -i {pairS3} -d {inps.dem_s3}'
+    cmd = f'{script} -i {pairS3} -d {inps.dem_s3}'
     print(cmd)
     run_bash_command(cmd)
 
