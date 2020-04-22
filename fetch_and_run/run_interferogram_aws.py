@@ -79,7 +79,7 @@ def run_isce():
 def sync_output(results_s3):
     """Store merged/ results folder in S3."""
     cmds = [f'cp topsApp.xml topsApp.log topsProc.xml download-links.txt merged/',
-            f'aws s3 sync merged ${esults_s3}']
+            f'aws s3 sync merged ${results_s3}']
     for cmd in cmds:
         run_bash_command(cmd)
 

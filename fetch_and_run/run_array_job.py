@@ -55,8 +55,9 @@ def main():
         index = int(os.environ['AWS_BATCH_JOB_ARRAY_INDEX'])
         pairS3 = mapping[index]
         print(f'Batch index: {index}, Processing pair: {pairS3}')
-        cmd = f'{script} -i {pairS3} -d {inps.dem_s3}'
-        run_bash_command(cmd)
+        #cmd = f'{script} -i {pairS3} -d {inps.dem_s3}'
+        #run_bash_command(cmd)
+        error
         sys.exit(0)
     except Exception as e:
         print(e)
