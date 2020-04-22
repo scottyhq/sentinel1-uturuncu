@@ -45,6 +45,8 @@ def run_bash_command(cmd):
             print("Child returned", retcode, file=sys.stderr)
     except OSError as e:
         print("Execution failed:", e, file=sys.stderr)
+    finally:
+        return retcode
 
 
 def get_proc_files(int_s3, dem_s3):
@@ -67,9 +69,17 @@ def cleanup():
     geom_master masterdir PICKLE slavedir'
     #cmd = 'rm -r S1*zip dem*'
     run_bash_command(cmd)
-    #
 
 def run_isce():
+    """Call topsApp.py to generate single interferogram."""
+    cmd = 'topsApp.py --steps 2>&1 | tee topsApp.log'
+    print(cmd)
+    run_bash_command(cmd)
+    echo "Syncing results to ${S3_OUTPUT} ..."
+cp topsApp.xml topsApp.log topsProc.xml download-links.txt merged/
+aws s3 sync merged ${S3_OUTPUT}
+
+def sync_output():
     """Call topsApp.py to generate single interferogram."""
     cmd = 'topsApp.py --steps 2>&1 | tee topsApp.log'
     print(cmd)
@@ -88,9 +98,9 @@ def main():
     if not os.path.isdir(intname): os.makedirs(intname)
     os.chdir(intname)
 
-    get_proc_files(inps.int_s3, inps.dem_s3)
-    download_slcs()
-    run_isce()
+    retcode = get_proc_files(inps.int_s3, inps.dem_s3)
+    retcode = download_slcs()
+    retcode = run_isce()
     # Not really necessary since EBS drive deleted
     #cleanup()
 

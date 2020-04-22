@@ -27,6 +27,8 @@ def run_bash_command(cmd):
             print("Child returned", retcode, file=sys.stderr)
     except OSError as e:
         print("Execution failed:", e, file=sys.stderr)
+    finally:
+        return retcode
 
 
 def get_batch_mapping(list_s3):
@@ -53,7 +55,8 @@ def main():
     print(f'Batch index: {index}, Processing pair: {pairS3}')
     cmd = f'{script} -i {pairS3} -d {inps.dem_s3}'
     print(cmd)
-    run_bash_command(cmd)
+    retcode = run_bash_command(cmd)
+    return retcode
 
 if __name__ == '__main__':
     main()
