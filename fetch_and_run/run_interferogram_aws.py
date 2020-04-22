@@ -54,13 +54,15 @@ def get_proc_files(int_s3, dem_s3):
     cmds = [f'aws s3 sync {int_s3} .',
             f'aws s3 sync {dem_s3} .']
     for cmd in cmds:
-        run_bash_command(cmd)
+        retcode = run_bash_command(cmd)
+    return retcode
 
 
 def download_slcs():
     """Download SLC images from ASF server."""
     cmd = 'aria2c -c -x 8 -s 8 -i download-links.txt'
-    run_bash_command(cmd)
+    retcode = run_bash_command(cmd)
+    return retcode
 
 def cleanup():
     """Remove specified files from processing directory."""
@@ -69,40 +71,48 @@ def cleanup():
     geom_master masterdir PICKLE slavedir'
     #cmd = 'rm -r S1*zip dem*'
     run_bash_command(cmd)
+    return retcode
 
 def run_isce():
     """Call topsApp.py to generate single interferogram."""
     cmd = 'topsApp.py --steps 2>&1 | tee topsApp.log'
     print(cmd)
     run_bash_command(cmd)
-    echo "Syncing results to ${S3_OUTPUT} ..."
-cp topsApp.xml topsApp.log topsProc.xml download-links.txt merged/
-aws s3 sync merged ${S3_OUTPUT}
 
-def sync_output():
-    """Call topsApp.py to generate single interferogram."""
-    cmd = 'topsApp.py --steps 2>&1 | tee topsApp.log'
-    print(cmd)
-    run_bash_command(cmd)
+def sync_output(results_s3):
+    """Store merged/ results folder in S3."""
+    cmds = [f'cp topsApp.xml topsApp.log topsProc.xml download-links.txt merged/',
+            f'aws s3 sync merged ${esults_s3}']
+    for cmd in cmds:
+        retcode = run_bash_command(cmd)
+    return retcode
 
 
 def main():
     """Process single interferogram."""
-    inps = cmdLineParse()
-    print_batch_params()
-    intname = inps.int_s3.lstrip('s3://')
-    
-    # Process in mounted EBS drive /opt/scratch
-    os.chdir('/opt/scratch')
-    
-    if not os.path.isdir(intname): os.makedirs(intname)
-    os.chdir(intname)
+    try:
+        inps = cmdLineParse()
+        print_batch_params()
+        intname = inps.int_s3.lstrip('s3://')
 
-    retcode = get_proc_files(inps.int_s3, inps.dem_s3)
-    retcode = download_slcs()
-    retcode = run_isce()
-    # Not really necessary since EBS drive deleted
-    #cleanup()
+        # Process in mounted EBS drive /opt/scratch
+        os.chdir('/opt/scratch')
+
+        if not os.path.isdir(intname): os.makedirs(intname)
+        os.chdir(intname)
+
+        retcode = get_proc_files(inps.int_s3, inps.dem_s3)
+        retcode = download_slcs()
+        retcode = run_isce()
+        # Not really necessary since EBS drive deleted
+        #cleanup()
+
+        results_s3 = inps.int_s3.replace('processing', 'results')
+        retcode = sync_output(results_s3)
+        return 0
+    except:
+        return retcode
+        raise
 
 
 if __name__ == '__main__':

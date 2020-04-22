@@ -45,18 +45,22 @@ def get_batch_mapping(list_s3):
 
 def main():
     """Launch processing of single interferogram."""
-    inps = cmdLineParse()
-    scriptdir = os.path.dirname(os.path.realpath(__file__))
-    print(scriptdir, os.listdir(scriptdir))
-    script = os.path.join(scriptdir,'run_interferogram_aws.py')
-    mapping = get_batch_mapping(inps.batchmap_s3)
-    index = int(os.environ['AWS_BATCH_JOB_ARRAY_INDEX'])
-    pairS3 = mapping[index]
-    print(f'Batch index: {index}, Processing pair: {pairS3}')
-    cmd = f'{script} -i {pairS3} -d {inps.dem_s3}'
-    print(cmd)
-    retcode = run_bash_command(cmd)
-    return retcode
+    try:
+        inps = cmdLineParse()
+        scriptdir = os.path.dirname(os.path.realpath(__file__))
+        print(scriptdir, os.listdir(scriptdir))
+        script = os.path.join(scriptdir,'run_interferogram_aws.py')
+        mapping = get_batch_mapping(inps.batchmap_s3)
+        index = int(os.environ['AWS_BATCH_JOB_ARRAY_INDEX'])
+        pairS3 = mapping[index]
+        print(f'Batch index: {index}, Processing pair: {pairS3}')
+        cmd = f'{script} -i {pairS3} -d {inps.dem_s3}'
+        print(cmd)
+        retcode = run_bash_command(cmd)
+        return 0
+    except:
+        return retcode
+        raise
 
 if __name__ == '__main__':
     main()
