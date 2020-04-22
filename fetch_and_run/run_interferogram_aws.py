@@ -37,6 +37,7 @@ def print_batch_params():
 
 def run_bash_command(cmd):
     """Call a system command through the subprocess python module."""
+    print(cmd)
     try:
         retcode = subprocess.call(cmd, shell=True)
         if retcode < 0:
@@ -54,15 +55,13 @@ def get_proc_files(int_s3, dem_s3):
     cmds = [f'aws s3 sync {int_s3} .',
             f'aws s3 sync {dem_s3} .']
     for cmd in cmds:
-        retcode = run_bash_command(cmd)
-    return retcode
+        run_bash_command(cmd)
 
 
 def download_slcs():
     """Download SLC images from ASF server."""
     cmd = 'aria2c -c -x 8 -s 8 -i download-links.txt'
-    retcode = run_bash_command(cmd)
-    return retcode
+    run_bash_command(cmd)
 
 def cleanup():
     """Remove specified files from processing directory."""
@@ -71,12 +70,10 @@ def cleanup():
     geom_master masterdir PICKLE slavedir'
     #cmd = 'rm -r S1*zip dem*'
     run_bash_command(cmd)
-    return retcode
-
+    
 def run_isce():
     """Call topsApp.py to generate single interferogram."""
     cmd = 'topsApp.py --steps 2>&1 | tee topsApp.log'
-    print(cmd)
     run_bash_command(cmd)
 
 def sync_output(results_s3):
@@ -84,8 +81,7 @@ def sync_output(results_s3):
     cmds = [f'cp topsApp.xml topsApp.log topsProc.xml download-links.txt merged/',
             f'aws s3 sync merged ${esults_s3}']
     for cmd in cmds:
-        retcode = run_bash_command(cmd)
-    return retcode
+        run_bash_command(cmd)
 
 
 def main():
@@ -101,18 +97,18 @@ def main():
         if not os.path.isdir(intname): os.makedirs(intname)
         os.chdir(intname)
 
-        retcode = get_proc_files(inps.int_s3, inps.dem_s3)
-        retcode = download_slcs()
-        retcode = run_isce()
+        get_proc_files(inps.int_s3, inps.dem_s3)
+        download_slcs()
+        run_isce()
         # Not really necessary since EBS drive deleted
         #cleanup()
 
         results_s3 = inps.int_s3.replace('processing', 'results')
-        retcode = sync_output(results_s3)
-        return 0
-    except:
-        return retcode
-        raise
+        sync_output(results_s3)
+        sys.exit(0)
+    except Exception as e:
+        print(e)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
