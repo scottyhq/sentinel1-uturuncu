@@ -55,13 +55,15 @@ def get_proc_files(int_s3, dem_s3):
     cmds = [f'aws s3 sync {int_s3} .',
             f'aws s3 sync {dem_s3} .']
     for cmd in cmds:
-        run_bash_command(cmd)
+        retcode = run_bash_command(cmd)
+    return retcode
 
 
 def download_slcs():
     """Download SLC images from ASF server."""
     cmd = 'aria2c -c -x 8 -s 8 -i download-links.txt'
-    run_bash_command(cmd)
+    retcode = run_bash_command(cmd)
+    return retcode
 
 def cleanup():
     """Remove specified files from processing directory."""
@@ -69,23 +71,27 @@ def cleanup():
     ESD fine_coreg fine_interferogram fine_offsets \
     geom_master masterdir PICKLE slavedir'
     #cmd = 'rm -r S1*zip dem*'
-    run_bash_command(cmd)
+    retcode = run_bash_command(cmd)
+    return retcode
     
 def run_isce():
     """Call topsApp.py to generate single interferogram."""
     cmd = 'topsApp.py --steps 2>&1 | tee topsApp.log'
-    run_bash_command(cmd)
+    retcode = run_bash_command(cmd)
+    return retcode
 
 def sync_output(results_s3):
     """Store merged/ results folder in S3."""
     cmds = [f'cp topsApp.xml topsApp.log topsProc.xml download-links.txt merged/',
             f'aws s3 sync merged ${results_s3}']
     for cmd in cmds:
-        run_bash_command(cmd)
+        retcode = run_bash_command(cmd)
+    return retcode
 
 
 def main():
     """Process single interferogram."""
+    retcode = 1
     try:
         inps = cmdLineParse()
         print_batch_params()
@@ -97,18 +103,18 @@ def main():
         if not os.path.isdir(intname): os.makedirs(intname)
         os.chdir(intname)
 
-        get_proc_files(inps.int_s3, inps.dem_s3)
-        download_slcs()
-        run_isce()
+        retcode = get_proc_files(inps.int_s3, inps.dem_s3)
+        retcode = download_slcs()
+        retcode = run_isce()
         # Not really necessary since EBS drive deleted
         #cleanup()
 
         results_s3 = inps.int_s3.replace('processing', 'results')
-        sync_output(results_s3)
-        sys.exit(0)
+        retcode = sync_output(results_s3)
     except Exception as e:
         print(e)
-        sys.exit(1)
+    finally:
+        sys.exit(retcode)
 
 
 if __name__ == '__main__':
