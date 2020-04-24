@@ -1,0 +1,27 @@
+# processing template
+topsinsar:
+  sensorname: SENTINEL1
+  swaths: [1,2]
+  azimuthlooks: 7
+  rangelooks: 19
+  doesd: True
+  doionospherecorrection: True
+  dounwrap: True
+  unwrappername: snaphu_mcf
+  demfilename: demLat_S25_S20_Lon_W070_W064.dem.wgs84
+  usegpu: False
+  regionofinterest: [-23.0, -21.5, -68, -66.5]
+  geocodeboundingbox: [-23.0, -21.5, -68, -66.5]
+
+  master:
+    safe: ''
+    output directory: masterdir
+    orbit directory: ./
+    polarization: vv
+
+  slave:
+    safe: ''
+    output directory: slavedir
+    orbit directory: ./
+    polarization: vv
+
