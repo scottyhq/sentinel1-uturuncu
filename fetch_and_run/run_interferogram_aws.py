@@ -52,8 +52,8 @@ def run_bash_command(cmd):
 
 def get_proc_files(int_s3, dem_s3):
     """Download ISCE configuration files and DEM from S3."""
-    cmds = [f'aws s3 sync {int_s3} .',
-            f'aws s3 sync {dem_s3} .']
+    cmds = [f'aws s3 sync {int_s3} . --no-progress',
+            f'aws s3 sync {dem_s3} . --no-progress']
     for cmd in cmds:
         retcode = run_bash_command(cmd)
     return retcode
@@ -61,7 +61,7 @@ def get_proc_files(int_s3, dem_s3):
 
 def download_slcs():
     """Download SLC images from ASF server."""
-    cmd = 'aria2c -c -x 8 -s 8 -i download-links.txt'
+    cmd = 'aria2c --show-console-readout=false --console-log-level=error -c -x 8 -s 8 -i download-links.txt'
     retcode = run_bash_command(cmd)
     return retcode
 
@@ -83,7 +83,7 @@ def run_isce():
 def sync_output(results_s3):
     """Store merged/ results folder in S3."""
     cmds = [f'cp topsApp.xml topsApp.log topsProc.xml download-links.txt merged/',
-            f'aws s3 sync merged {results_s3}']
+            f'aws s3 sync merged {results_s3} --no-progress']
     for cmd in cmds:
         retcode = run_bash_command(cmd)
     return retcode
